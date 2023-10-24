@@ -172,9 +172,10 @@ class OnboardDataflowspec:
             ]
         )
 
-        emp_rdd = self.spark.sparkContext.emptyRDD()
+        #emp_rdd = self.spark.sparkContext.emptyRDD()
         env = dict_obj["env"]
-        silver_transformation_json_df = self.spark.createDataFrame(data=emp_rdd, schema=columns)
+        #silver_transformation_json_df = self.spark.createDataFrame(data=emp_rdd, schema=columns)
+        silver_transformation_json_df = self.spark.createDataFrame([], columns)
         silver_transformation_json_file = onboarding_df.select(f"silver_transformation_json_{env}").dropDuplicates()
 
         silver_transformation_json_files = silver_transformation_json_file.collect()
@@ -211,9 +212,6 @@ class OnboardDataflowspec:
         location = dict_obj["silver_dataflowspec_path"]
 
         if dict_obj["overwrite"] == "True":
-            self.deltaPipelinesMetaStoreOps.create_database(
-                database, comments="creating databse in standard merge block"
-            )
             silver_dataflow_spec_df.write.format("delta").mode("overwrite").saveAsTable(f"{catalog}.{database}.{table}")
         else:
             self.deltaPipelinesMetaStoreOps.create_database(
@@ -276,7 +274,7 @@ class OnboardDataflowspec:
         database = dict_obj["database"]
         table = dict_obj["bronze_dataflowspec_table"]
         # location = dict_obj["bronze_dataflowspec_path"]
-        self.deltaPipelinesMetaStoreOps.create_database(database, comments="creating databse in standard merge block")
+        #self.deltaPipelinesMetaStoreOps.create_database(database, comments="creating databse in standard merge block")
         if dict_obj["overwrite"] == "True":
             bronze_dataflow_spec_df.write.format("delta").mode("overwrite").saveAsTable(
                 f"{catalog}.{database}.{table}"
@@ -404,7 +402,7 @@ class OnboardDataflowspec:
         )
         data = []
         onboarding_rows = onboarding_df.collect()
-        mandatory_fields = ["data_flow_id", "data_flow_group", "source_details", f"bronze_database_{env}",
+        mandatory_fields = ["data_flow_id", "data_flow_group", "source_details", f"bronze_catalog_{env}", f"bronze_database_{env}",
                             "bronze_table", "bronze_reader_options", f"bronze_table_path_{env}"]
         for onboarding_row in onboarding_rows:
             self.__validate_mandatory_fields(onboarding_row, mandatory_fields)
@@ -449,6 +447,7 @@ class OnboardDataflowspec:
             bronze_target_format = "delta"
 
             bronze_target_details = {
+                "catalog" : onboarding_row["bronze_catalog_{}".format(env)],
                 "database": onboarding_row["bronze_database_{}".format(env)],
                 "table": onboarding_row["bronze_table"],
                 "path": onboarding_row["bronze_table_path_{}".format(env)],
@@ -599,7 +598,7 @@ class OnboardDataflowspec:
         data = []
 
         onboarding_rows = onboarding_df.collect()
-        mandatory_fields = ["data_flow_id", "data_flow_group", "source_details", f"silver_database_{env}",
+        mandatory_fields = ["data_flow_id", "data_flow_group", "source_details", f"silver_catalog_{env}", f"silver_database_{env}",
                             "silver_table", f"silver_table_path_{env}", f"silver_transformation_json_{env}"]
 
         for onboarding_row in onboarding_rows:
@@ -611,11 +610,13 @@ class OnboardDataflowspec:
             silver_target_format = "delta"
 
             bronze_target_details = {
+                "catalog": onboarding_row["bronze_catalog_{}".format(env)],
                 "database": onboarding_row["bronze_database_{}".format(env)],
                 "table": onboarding_row["bronze_table"],
                 "path": onboarding_row["bronze_table_path_{}".format(env)],
             }
             silver_target_details = {
+                "catalog": onboarding_row["silver_catalog_{}".format(env)],
                 "database": onboarding_row["silver_database_{}".format(env)],
                 "table": onboarding_row["silver_table"],
                 "path": onboarding_row["silver_table_path_{}".format(env)],
