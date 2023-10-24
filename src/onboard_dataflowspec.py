@@ -71,7 +71,6 @@ class OnboardDataflowspec:
             dict_obj ([type]): Required attributes are given below list
                                 attributes = [
                                 "onboarding_file_path",
-                                "catalog",
                                 "database",
                                 "env",
                                 "bronze_dataflowspec_table",
@@ -85,7 +84,6 @@ class OnboardDataflowspec:
         """
         attributes = [
             "onboarding_file_path",
-            "catalog",
             "database",
             "env",
             "bronze_dataflowspec_table",
@@ -104,28 +102,26 @@ class OnboardDataflowspec:
     def register_bronze_dataflow_spec_tables(self):
         """Register bronze/silver dataflow specs tables."""
         self.deltaPipelinesMetaStoreOps.register_table_in_metastore(
-            self.dict_obj["catalog"],
             self.dict_obj["database"],
             self.dict_obj["bronze_dataflowspec_table"],
             self.dict_obj["bronze_dataflowspec_path"],
         )
         logger.info(
-            f"""onboarded bronze table={ self.dict_obj["catalog"]}.{ self.dict_obj["database"]}.{self.dict_obj["bronze_dataflowspec_table"]}"""
+            f"""onboarded bronze table={ self.dict_obj["database"]}.{self.dict_obj["bronze_dataflowspec_table"]}"""
         )
-        self.spark.read.table(f"""{ self.dict_obj["catalog"]}.{ self.dict_obj["database"]}.{self.dict_obj["bronze_dataflowspec_table"]}""").show()
+        self.spark.read.table(f"""{ self.dict_obj["database"]}.{self.dict_obj["bronze_dataflowspec_table"]}""").show()
 
     def register_silver_dataflow_spec_tables(self):
         """Register bronze dataflow specs tables."""
         self.deltaPipelinesMetaStoreOps.register_table_in_metastore(
-            self.dict_obj["catalog"],
             self.dict_obj["database"],
             self.dict_obj["silver_dataflowspec_table"],
             self.dict_obj["silver_dataflowspec_path"],
         )
         logger.info(
-            f"""onboarded silver table={ self.dict_obj["catalog"]}.{ self.dict_obj["database"]}.{self.dict_obj["silver_dataflowspec_table"]}"""
+            f"""onboarded silver table={ self.dict_obj["database"]}.{self.dict_obj["silver_dataflowspec_table"]}"""
         )
-        self.spark.read.table(f"""{ self.dict_obj["catalog"]}.{ self.dict_obj["database"]}.{self.dict_obj["silver_dataflowspec_table"]}""").show()
+        self.spark.read.table(f"""{ self.dict_obj["database"]}.{self.dict_obj["silver_dataflowspec_table"]}""").show()
 
     def onboard_silver_dataflow_spec(self):
         """Onboard silver dataflow spec.
@@ -136,7 +132,6 @@ class OnboardDataflowspec:
             dict_obj ([type]): Required attributes are given below list
                                 attributes = [
                                 "onboarding_file_path",
-                                "catalog",
                                 "database",
                                 "env",
                                 "silver_dataflowspec_table",
@@ -148,7 +143,6 @@ class OnboardDataflowspec:
         """
         attributes = [
             "onboarding_file_path",
-            "catalog",
             "database",
             "env",
             "silver_dataflowspec_table",
@@ -205,7 +199,6 @@ class OnboardDataflowspec:
 
         silver_fields = [field.name for field in dataclasses.fields(SilverDataflowSpec)]
         silver_dataflow_spec_df = silver_dataflow_spec_df.select(silver_fields)
-        catalog = dict_obj["catalog"]
         database = dict_obj["database"]
         table = dict_obj["silver_dataflowspec_table"]
         location = dict_obj["silver_dataflowspec_path"]
@@ -214,17 +207,17 @@ class OnboardDataflowspec:
             self.deltaPipelinesMetaStoreOps.create_database(
                 database, comments="creating databse in standard merge block"
             )
-            silver_dataflow_spec_df.write.format("delta").mode("overwrite").saveAsTable(f"{catalog}.{database}.{table}")
+            silver_dataflow_spec_df.write.format("delta").mode("overwrite").saveAsTable(f"{database}.{table}")
         else:
             self.deltaPipelinesMetaStoreOps.create_database(
                 database, comments="creating databse in standard merge block"
             )
-            self.deltaPipelinesMetaStoreOps.register_table_in_metastore(catalog, database, table, location)
-            original_dataflow_df = self.spark.read.format("delta").table(f"{catalog}.{database}.{table}")
+            self.deltaPipelinesMetaStoreOps.register_table_in_metastore(database, table, location)
+            original_dataflow_df = self.spark.read.format("delta").table(f"{database}.{table}")
             logger.info("In Merge block for Silver")
             self.deltaPipelinesInternalTableOps.merge(
                 silver_dataflow_spec_df,
-                f"{catalog}.{database}.{table}",
+                f"{database}.{table}",
                 ["dataFlowId"],
                 original_dataflow_df.columns,
             )
@@ -239,7 +232,6 @@ class OnboardDataflowspec:
             dict_obj ([type]): [description]
                                 attributes = [
                                 "onboarding_file_path",
-                                "catalog",
                                 "database",
                                 "env",
                                 "bronze_dataflowspec_table",
@@ -251,7 +243,6 @@ class OnboardDataflowspec:
         """
         attributes = [
             "onboarding_file_path",
-            "catalog",
             "database",
             "env",
             "bronze_dataflowspec_table",
@@ -272,25 +263,24 @@ class OnboardDataflowspec:
         )
         bronze_fields = [field.name for field in dataclasses.fields(BronzeDataflowSpec)]
         bronze_dataflow_spec_df = bronze_dataflow_spec_df.select(bronze_fields)
-        catalog = dict_obj["catalog"]
         database = dict_obj["database"]
         table = dict_obj["bronze_dataflowspec_table"]
         # location = dict_obj["bronze_dataflowspec_path"]
         self.deltaPipelinesMetaStoreOps.create_database(database, comments="creating databse in standard merge block")
         if dict_obj["overwrite"] == "True":
             bronze_dataflow_spec_df.write.format("delta").mode("overwrite").saveAsTable(
-                f"{catalog}.{database}.{table}"
+                f"{database}.{table}"
             )
 
         else:
             # self.deltaPipelinesMetaStoreOps.create_database(
             # database, comments="creating databse in bronze merge block")
             # self.deltaPipelinesMetaStoreOps.register_table_in_metastore(database, table, location)
-            original_dataflow_df = self.spark.read.format("delta").table(f"{catalog}.{database}.{table}")
+            original_dataflow_df = self.spark.read.format("delta").table(f"{database}.{table}")
             logger.info("In Merge block for Bronze")
             self.deltaPipelinesInternalTableOps.merge(
                 bronze_dataflow_spec_df,
-                f"{catalog}.{database}.{table}",
+                f"{database}.{table}",
                 ["dataFlowId"],
                 original_dataflow_df.columns,
             )
