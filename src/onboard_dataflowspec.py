@@ -13,8 +13,8 @@ from pyspark.sql.types import (
     MapType,
 )
 
-# from src.dataflow_spec import BronzeDataflowSpec, SilverDataflowSpec, DataflowSpecUtils
-# from src.metastore_ops import DeltaPipelinesMetaStoreOps, DeltaPipelinesInternalTableOps
+from src.dataflow_spec import BronzeDataflowSpec, SilverDataflowSpec, DataflowSpecUtils
+from src.metastore_ops import DeltaPipelinesMetaStoreOps, DeltaPipelinesInternalTableOps
 
 logger = logging.getLogger("dlt-meta")
 logger.setLevel(logging.INFO)
