@@ -6,8 +6,8 @@ from pyspark.sql import DataFrame
 from pyspark.sql.functions import expr
 from pyspark.sql.types import StructType, StructField
 
-# from src.dataflow_spec import BronzeDataflowSpec, SilverDataflowSpec, DataflowSpecUtils
-# from src.pipeline_readers import PipelineReaders
+from src.dataflow_spec import BronzeDataflowSpec, SilverDataflowSpec, DataflowSpecUtils
+from src.pipeline_readers import PipelineReaders
 
 logger = logging.getLogger("dlt-meta")
 logger.setLevel(logging.INFO)
